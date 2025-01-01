@@ -1,4 +1,6 @@
 ﻿#include "../exercise.h"
+#include <cstring>
+
 
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
@@ -10,8 +12,9 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
-        data = new T[size];
-        std::memcpy(data, data_, size * sizeof(T));
+        std::memcpy(shape, shape_, 4 * size * sizeof(unsigned int));
+        data = new T[size*shape[0]*shape[1]*shape[2]*shape[3]];
+        std::memcpy(data, data_, size*shape[0]*shape[1]*shape[2]*shape[3] * sizeof(T));
     }
     ~Tensor4D() {
         delete[] data;
@@ -28,6 +31,27 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+        bool jud[]{false,false,false,false};
+        for (int i=0;i<4;i++){
+            if(this->shape[i]!=others.shape[i] and others.shape[i]==1){
+                jud[i]=true;
+            }
+        }
+        int ind[]{0,0,0,0};
+        for(int i=0;i<this->shape[0];i++){
+            ind[0] = jud[0]?0:i;
+            for(int j=0;j<this->shape[1];j++){
+                ind[1] = jud[1]?0:j;
+                for(int k=0;k<this->shape[2];k++){
+                    ind[2] = jud[2]?0:k;
+                    for(int l=0;l<this->shape[3];l++){
+                        ind[3] = jud[3]?0:l;
+                        this->data[i * this->shape[1] * this->shape[2] * this->shape[3] + j * this->shape[2] * this->shape[3] + k * this->shape[3] + l ] += others.data[ind[0] * others.shape[1] * others.shape[2] * others.shape[3] + ind[1] *others.shape[2] *others.shape[3] +ind[2]*others.shape[3] +ind[3]];
+
+                    }
+                }
+            }
+        }
         return *this;
     }
 };
